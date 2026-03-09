@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LabClaw: Skill Library for Autonomous Biomedical Research</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .serif {
+            font-family: 'Noto Serif', serif;
+        }
+
+        /* Tech Animations */
+        @keyframes shimmer {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+        .tech-shimmer {
+            background: linear-gradient(90deg, #1e40af 0%, #3b82f6 25%, #60a5fa 50%, #3b82f6 75%, #1e40af 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 4s linear infinite;
+        }
+
+        /* Animated Background Blobs */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        }
+
+        .tech-card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tech-card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.1), 0 8px 10px -6px rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .mono-tag {
+            font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+            letter-spacing: -0.025em;
+        }
+
+        /* Domain card accent top border */
+        .domain-accent {
+            position: relative;
+            overflow: hidden;
+        }
+        .domain-accent::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .domain-accent:hover::before { opacity: 1; }
+
+        /* Sequential card pulse */
+        @keyframes borderPulse {
+            0%, 100% { border-color: #e5e7eb; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); transform: scale(1); }
+            50% { border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(59,130,246,0.15); transform: scale(1.01); }
+        }
+        .sat-step-1 { animation: borderPulse 4s infinite; animation-delay: 0s; }
+        .sat-step-2 { animation: borderPulse 4s infinite; animation-delay: 0.8s; }
+        .sat-step-3 { animation: borderPulse 4s infinite; animation-delay: 1.6s; }
+        .sat-step-4 { animation: borderPulse 4s infinite; animation-delay: 2.4s; }
+        .sat-step-5 { animation: borderPulse 4s infinite; animation-delay: 3.2s; }
+
+        /* Code block */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        .code-block .cmd { color: #38bdf8; }
+        .code-block .str { color: #a78bfa; }
+        .code-block .comment { color: #64748b; }
+
+        /* Video Aspect Ratio */
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background: #000;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .video-container video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+
+        /* Scroll reveal */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        }
+        .scroll-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased bg-slate-50 relative overflow-x-hidden">
+    <!-- Dynamic Background Blobs -->
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <div class="absolute top-0 -left-4 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+        <div class="absolute top-0 -right-4 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-8 left-20 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <!-- ═══════════ Hero Section ═══════════ -->
+    <section class="relative z-10 pt-12 pb-12 border-b border-gray-200/60 bg-white/30 backdrop-blur-sm">
+        <div class="max-w-6xl mx-auto px-4">
+
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div class="flex flex-col items-center md:items-start gap-2 flex-1">
+                    <!-- Logo + Title on same row -->
+                    <div class="flex items-center gap-3">
+                        <img src="assets/logos/logo.png" alt="LabClaw Logo" class="h-14 w-14 object-contain rounded-xl shadow-sm bg-white p-1 flex-shrink-0">
+                        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight whitespace-nowrap leading-none">
+                            <span class="tech-shimmer">LabClaw</span>
+                        </h1>
+                    </div>
+                    <!-- Typewriter subtitle below -->
+                    <p class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center justify-center md:justify-start pl-1">
+                        <span class="mr-2">🦞 Claw for</span>
+                        <span id="hero-typewriter" class="text-blue-600 border-r-2 border-blue-600 pr-1 font-mono"></span>
+                    </p>
+                </div>
+
+                <!-- Right: Affiliations (Stanford, Princeton preserved) -->
+                <div class="flex flex-col items-center md:items-end pb-2">
+                    <div class="flex flex-wrap items-center justify-center md:justify-end gap-6">
+                        <img src="assets/logos/stanford.png" alt="Stanford University" class="h-10 opacity-90 hover:opacity-100 transition-opacity">
+                        <img src="assets/logos/princeton.png" alt="Princeton University" class="h-10 opacity-90 hover:opacity-100 transition-opacity">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Wide Banner Video -->
+            <div class="w-full mb-8 bg-black shadow-2xl rounded-xl overflow-hidden border border-gray-800">
+                <video autoplay playsinline loop controls class="w-full h-auto block max-h-[80vh] object-cover" muted="false">
+                    <source src="frontpage_video.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <!-- Action Buttons (Dock Style) -->
+            <div class="flex justify-center">
+                <div class="glass-panel rounded-full p-2.5 flex gap-4 transform hover:scale-105 transition duration-300 flex-wrap justify-center">
+                    <a href="https://github.com/wu-yc/LabClaw" target="_blank" class="bg-gray-900 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-gray-700 transition flex items-center text-sm shadow-md">
+                        <i class="fab fa-github mr-2"></i> GitHub
+                    </a>
+                    <a href="#quickstart" class="bg-white/80 text-gray-800 px-6 py-2.5 rounded-full font-semibold hover:bg-white hover:text-blue-600 transition flex items-center text-sm shadow-sm border border-gray-100">
+                        <i class="fas fa-terminal mr-2"></i> Quick Start
+                    </a>
+                    <a href="https://ai4labos.com" target="_blank" class="bg-indigo-50 text-indigo-700 px-6 py-2.5 rounded-full font-semibold hover:bg-indigo-100 transition flex items-center text-sm shadow-sm border border-indigo-200">
+                        <i class="fas fa-flask mr-2"></i> Sister Project: LabOS
+                    </a>
+                    <a href="https://medos-ai.github.io/" target="_blank" class="bg-indigo-50 text-indigo-700 px-6 py-2.5 rounded-full font-semibold hover:bg-indigo-100 transition flex items-center text-sm shadow-sm border border-indigo-200">
+                        <i class="fas fa-brain mr-2"></i> Sister Project: MedOS
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- At a Glance Stats Strip -->
+        <div class="max-w-5xl mx-auto px-4 mt-16">
+            <div class="flex items-center justify-center gap-4 mb-6">
+                <div class="h-[1px] w-12 bg-gray-300"></div>
+                <h3 class="text-center text-gray-400 text-xs font-bold uppercase tracking-[0.2em] mono-tag">At a Glance</h3>
+                <div class="h-[1px] w-12 bg-gray-300"></div>
+            </div>
+            <div class="grid grid-cols-5 gap-[1px] bg-gray-200 rounded-2xl overflow-hidden shadow-sm border border-gray-200/50">
+                <div class="bg-white p-6 text-center">
+                    <div class="text-3xl font-extrabold text-blue-600">206</div>
+                    <div class="text-xs text-gray-400 uppercase tracking-widest mt-1 font-bold">Skills</div>
+                </div>
+                <div class="bg-white p-6 text-center">
+                    <div class="text-3xl font-extrabold text-blue-600">73</div>
+                    <div class="text-xs text-gray-400 uppercase tracking-widest mt-1 font-bold">Biology</div>
+                </div>
+                <div class="bg-white p-6 text-center">
+                    <div class="text-3xl font-extrabold text-blue-600">36</div>
+                    <div class="text-xs text-gray-400 uppercase tracking-widest mt-1 font-bold">Pharma</div>
+                </div>
+                <div class="bg-white p-6 text-center">
+                    <div class="text-3xl font-extrabold text-blue-600">20</div>
+                    <div class="text-xs text-gray-400 uppercase tracking-widest mt-1 font-bold">Medicine</div>
+                </div>
+                <div class="bg-white p-6 text-center">
+                    <div class="text-3xl font-extrabold text-blue-600">48</div>
+                    <div class="text-xs text-gray-400 uppercase tracking-widest mt-1 font-bold">Data Sci</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Skill Domains ═══════════ -->
+    <section class="py-20 relative z-10">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-2">
+                Five Domains of Biomedical AI
+                <span class="ml-2 text-sm font-semibold text-indigo-500 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full align-middle mono-tag">+ XR</span>
+            </h2>
+            <p class="text-center text-gray-500 max-w-3xl mx-auto mb-10 text-sm leading-relaxed">
+                206 agentic skills spanning the full biomedical stack — from single-cell sequencing pipelines to XR-assisted surgical intelligence, each composable into autonomous research workflows.
+            </p>
+
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+                <!-- Left: Domain Cards (2-column grid) -->
+                <div class="flex-1 grid grid-cols-2 gap-4">
+                    <div class="bg-white/50 backdrop-blur-sm p-5 rounded-xl border border-gray-100 tech-card-hover domain-accent sat-step-1" style="--accent: #059669;">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center border border-emerald-100">🧬</div>
+                            <span class="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-bold">73</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1">Biology & Life Sciences</h3>
+                        <p class="text-xs text-gray-500 leading-relaxed">Bioinformatics, single-cell, genomics, proteomics, multi-omics, structural biology.</p>
+                    </div>
+
+                    <div class="bg-white/50 backdrop-blur-sm p-5 rounded-xl border border-gray-100 tech-card-hover domain-accent sat-step-2" style="--accent: #7c3aed;">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="w-9 h-9 bg-violet-50 text-violet-600 rounded-lg flex items-center justify-center border border-violet-100">💊</div>
+                            <span class="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-bold">36</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1">Pharmacy & Drug Discovery</h3>
+                        <p class="text-xs text-gray-500 leading-relaxed">Cheminformatics, molecular ML, docking, target discovery, pharmacovigilance.</p>
+                    </div>
+
+                    <div class="bg-white/50 backdrop-blur-sm p-5 rounded-xl border border-gray-100 tech-card-hover domain-accent sat-step-3" style="--accent: #dc2626;">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="w-9 h-9 bg-red-50 text-red-500 rounded-lg flex items-center justify-center border border-red-100">🏥</div>
+                            <span class="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-bold">20</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1">Medical & Clinical</h3>
+                        <p class="text-xs text-gray-500 leading-relaxed">Clinical trials, precision medicine, oncology, rare disease diagnosis, imaging.</p>
+                    </div>
+
+                    <div class="bg-white/50 backdrop-blur-sm p-5 rounded-xl border border-gray-100 tech-card-hover domain-accent sat-step-4" style="--accent: #d97706;">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="w-9 h-9 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center border border-amber-100">⚙️</div>
+                            <span class="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-bold">48</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1">General & Data Science</h3>
+                        <p class="text-xs text-gray-500 leading-relaxed">Statistics, ML, data management, scientific visualization, reproducibility.</p>
+                    </div>
+
+                    <div class="bg-white/50 backdrop-blur-sm p-5 rounded-xl border border-gray-100 tech-card-hover domain-accent sat-step-5" style="--accent: #2563eb;">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="w-9 h-9 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center border border-blue-100">📚</div>
+                            <span class="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded font-bold">29</span>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1">Literature & Search</h3>
+                        <p class="text-xs text-gray-500 leading-relaxed">Academic search, biomedical databases, patents, grants, citation management.</p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 flex flex-col justify-center gap-2">
+                        <i class="fas fa-lightbulb text-yellow-500 text-sm"></i>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide">Skill Format</h4>
+                        <p class="text-xs text-gray-600 leading-relaxed mono-tag text-blue-600">Overview → When to Use → Capabilities → Examples</p>
+                    </div>
+                </div>
+
+                <!-- Right: XR Video (1:1, not too large) -->
+                <div class="lg:w-64 flex-shrink-0 flex flex-col items-center gap-3 lg:sticky lg:top-8">
+                    <div class="w-full bg-black rounded-2xl overflow-hidden shadow-xl border border-gray-800" style="aspect-ratio: 1/1;">
+                        <video src="XR.mp4" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse flex-shrink-0"></span>
+                        <p class="text-xs text-gray-400 font-semibold mono-tag tracking-wide">XR-ASSISTED BIOMEDICAL RESEARCH</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Representative Workflows ═══════════ -->
+    <section class="py-16 bg-gray-50 border-t border-gray-200">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">Representative Workflows</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                Each workflow chains multiple skills into end-to-end research automation.
+            </p>
+
+            <div class="space-y-4">
+                <!-- Workflow 1 -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm tech-card-hover scroll-reveal">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center text-sm border border-emerald-100">
+                                <i class="fas fa-dna"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-800">Single-cell & Spatial Omics</h3>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">anndata</span>
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">scanpy</span>
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">tooluniverse-spatial-transcriptomics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow 2 -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm tech-card-hover scroll-reveal">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-violet-50 text-violet-600 rounded-lg flex items-center justify-center text-sm border border-violet-100">
+                                <i class="fas fa-pills"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-800">Drug Discovery & Design</h3>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">rdkit</span>
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">diffdock</span>
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">tooluniverse-drug-repurposing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow 3 -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm tech-card-hover scroll-reveal">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center text-sm border border-red-100">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-800">Clinical & Precision Medicine</h3>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">clinical</span>
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">tooluniverse-precision-oncology</span>
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">clinicaltrials-database</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow 4 -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm tech-card-hover scroll-reveal">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center text-sm border border-amber-100">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-800">Statistics, ML & Figures</h3>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">statistics</span>
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">scikit-learn</span>
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">scientific-visualization</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow 5 -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm tech-card-hover scroll-reveal">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-sm border border-blue-100">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-800">Literature Review & Reporting</h3>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">pubmed-search</span>
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">citation-management</span>
+                            <span class="mono-tag text-xs px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md border border-blue-100">scientific-writing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Quick Start ═══════════ -->
+    <section id="quickstart" class="py-16 bg-gray-50 border-t border-gray-200">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">One Message to Install Everything</h2>
+            
+            <div class="flex flex-col md:flex-row gap-12 items-center">
+                <!-- Left: Text + Terminal Code -->
+                <div class="flex flex-col justify-center flex-1">
+                    <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                        Just send a message to your <span class="font-semibold text-gray-800">OpenClaw</span> agent — it will automatically fetch and install LabClaw's full skill library into your workspace.
+                    </p>
+                    <div class="code-block shadow-lg transform hover:scale-[1.02] transition-transform duration-300 w-full">
+                        <div class="flex items-center gap-2 px-4 py-3 bg-white/5 border-b border-white/10">
+                            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                            <span class="ml-auto text-xs text-gray-500 mono-tag">OpenClaw</span>
+                        </div>
+                        <div class="p-6 text-sm leading-relaxed overflow-x-auto font-mono">
+                            <span class="comment"># Just send this message to OpenClaw:</span><br>
+                            <span class="cmd">install</span> <span class="str">https://github.com/wu-yc/LabClaw</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Demo GIF (portrait, narrower column) -->
+                <div class="flex items-center justify-center flex-shrink-0">
+                    <img src="install_demo.gif" alt="LabClaw Installation Demo" class="h-auto max-h-72 w-auto rounded-2xl shadow-lg">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Monitor the Lab ═══════════ -->
+    <section class="py-16 bg-white border-t border-gray-200">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">
+                LabClaw as Your <span class="tech-shimmer">Always-On Lab Agent</span>
+            </h2>
+            <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full mb-6"></div>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-4">
+                Deploy LabClaw as a persistent autonomous agent that never sleeps. It continuously monitors instrument feeds, interprets multimodal signals, and triggers agentic responses — all without human intervention.
+            </p>
+            <div class="flex flex-wrap justify-center gap-3 mb-12">
+                <span class="mono-tag text-xs px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full border border-blue-100 font-semibold">⚡ Real-Time Inference</span>
+                <span class="mono-tag text-xs px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100 font-semibold">🔬 Multimodal Perception</span>
+                <span class="mono-tag text-xs px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 font-semibold">🤖 Agentic Response</span>
+                <span class="mono-tag text-xs px-3 py-1.5 bg-purple-50 text-purple-600 rounded-full border border-purple-100 font-semibold">🛡 Anomaly Detection</span>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-gray-50 p-2 rounded-xl shadow-sm border border-gray-200 scroll-reveal">
+                    <div class="video-container">
+                        <video src="monitor1.mp4" controls preload="metadata" playsinline></video>
+                    </div>
+                    <div class="flex items-center justify-center gap-2 mt-3 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <p class="text-sm text-gray-600 font-medium mono-tag">LIVE · Continuous Experiment Monitoring</p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-2 rounded-xl shadow-sm border border-gray-200 scroll-reveal">
+                    <div class="video-container">
+                        <video src="monitor2.mp4" controls preload="metadata" playsinline></video>
+                    </div>
+                    <div class="flex items-center justify-center gap-2 mt-3 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                        <p class="text-sm text-gray-600 font-medium mono-tag">AGENT · Autonomous Anomaly Response</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Related Projects ═══════════ -->
+    <section class="py-16 bg-white border-t border-gray-200">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">Related Projects</h2>
+            <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full mb-12"></div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <a href="https://ai4labos.com" target="_blank" class="bg-gray-50 rounded-2xl p-8 border border-gray-100 tech-card-hover group flex flex-col">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center border border-indigo-100">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">LabOS</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 leading-relaxed flex-grow">
+                        AI-powered operating system for autonomous laboratory research — the runtime platform LabClaw's skill library is built to serve.
+                    </p>
+                    <div class="mt-4 text-xs text-blue-600 font-semibold flex items-center gap-1">
+                        ai4labos.com <i class="fas fa-arrow-right text-[10px]"></i>
+                    </div>
+                </a>
+
+                <a href="https://medos-ai.github.io/" target="_blank" class="bg-gray-50 rounded-2xl p-8 border border-gray-100 tech-card-hover group flex flex-col">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center border border-blue-100">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">MedOS</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 leading-relaxed flex-grow">
+                        AI-XR-Cobot World Model for clinical perception and action — bridging surgical intelligence with autonomous medical reasoning.
+                    </p>
+                    <div class="mt-4 text-xs text-blue-600 font-semibold flex items-center gap-1">
+                        medos-ai.github.io <i class="fas fa-arrow-right text-[10px]"></i>
+                    </div>
+                </a>
+
+                <a href="https://github.com/openclaw/openclaw" target="_blank" class="bg-gray-50 rounded-2xl p-8 border border-gray-100 tech-card-hover group flex flex-col">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-gray-100 text-gray-700 rounded-lg flex items-center justify-center border border-gray-200">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">OpenClaw</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 leading-relaxed flex-grow">
+                        The main runtime that loads workspace skills — the agent platform LabClaw is designed to plug into.
+                    </p>
+                    <div class="mt-4 text-xs text-blue-600 font-semibold flex items-center gap-1">
+                        github.com <i class="fas fa-arrow-right text-[10px]"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Team & Founding Partners (from MedOS) ═══════════ -->
+    <section class="py-16 bg-gray-50 border-t border-gray-200">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold mb-4">Team & Founding Partners</h2>
+                <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 mb-12">
+                <!-- Core Authors -->
+                <div class="bg-white rounded-2xl p-8 border border-gray-100 flex flex-col h-full shadow-sm">
+                    <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                        <i class="fas fa-users text-blue-600 mr-3"></i> Principal Investigators
+                    </h3>
+                    <div class="space-y-4 flex-grow">
+                        <a href="https://profiles.stanford.edu/186687" target="_blank" class="flex items-center justify-between p-4 bg-gray-50 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+                            <span class="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">Le Cong</span>
+                            <div class="flex items-center">
+                                <img src="assets/logos/stanford.png" alt="Stanford" class="h-10">
+                            </div>
+                        </a>
+                        <a href="https://ece.princeton.edu/people/mengdi-wang" target="_blank" class="flex items-center justify-between p-4 bg-gray-50 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+                            <span class="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">Mengdi Wang</span>
+                            <div class="flex items-center">
+                                <img src="assets/logos/princeton.png" alt="Princeton" class="h-10">
+                            </div>
+                        </a>
+                        <div class="mt-6 pt-4 border-t border-gray-200">
+                            <p class="text-sm text-gray-600">
+                                <span class="font-semibold text-blue-600">Contributors include:</span><br>
+                                <span class="font-medium mt-1 block text-gray-800">
+                                    <a href="https://wu-yc.github.io/" target="_blank" class="hover:text-blue-600 transition-colors">Yingcheng Charles Wu</a>, 
+                                    Zhe Zhao, 
+                                    <a href="https://www.linkedin.com/in/olliejian1999" target="_blank" class="hover:text-blue-600 transition-colors">Jinglin Jian</a>
+                                </span>
+                            </p>
+                        </div>
+                        
+                        <!-- Contact Section -->
+                        <div class="mt-3 pt-2 border-t border-gray-200 text-xs text-gray-600">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-gray-900 uppercase tracking-wider flex items-center whitespace-nowrap">
+                                    <i class="fas fa-envelope text-blue-600 mr-1.5"></i> Contact:
+                                </span>
+                                <a href="mailto:wuyc@stanford.edu" class="text-blue-600 hover:underline font-medium">Email</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Founding Partners -->
+                <div class="bg-white rounded-2xl p-8 border border-gray-100 flex flex-col h-full shadow-sm">
+                    <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                        <i class="fas fa-handshake text-blue-600 mr-3"></i> Founding Partners
+                    </h3>
+                    <div class="grid grid-cols-2 gap-6 items-center flex-grow content-center">
+                        <div class="flex items-center justify-center p-4 bg-gray-50 rounded-xl shadow-sm h-24 hover:shadow-md transition-shadow">
+                            <img src="assets/logos/nvidia.svg" alt="NVIDIA" class="h-6 object-contain">
+                        </div>
+                        <div class="flex items-center justify-center p-4 bg-gray-50 rounded-xl shadow-sm h-24 hover:shadow-md transition-shadow">
+                            <img src="assets/logos/nebius.png" alt="Nebius" class="h-9 object-contain">
+                        </div>
+                        <div class="flex items-center justify-center p-4 bg-gray-50 rounded-xl shadow-sm h-24 hover:shadow-md transition-shadow">
+                            <span class="font-bold text-gray-800 text-3xl tracking-tight">VITURE</span>
+                        </div>
+                        <div class="flex items-center justify-center p-4 bg-gray-50 rounded-xl shadow-sm h-24 hover:shadow-md transition-shadow">
+                            <div class="text-center">
+                                <span class="block font-bold text-gray-800 text-base leading-tight">AI4Science</span>
+                                <span class="block text-gray-500 text-sm uppercase tracking-wider mt-1">Catalyst Institute</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ═══════════ Footer ═══════════ -->
+    <footer class="bg-gray-900 text-white py-8 text-center text-sm">
+        <p class="opacity-60">
+            <i class="fab fa-creative-commons"></i> LabClaw · MIT License
+        </p>
+        <p class="opacity-40 mt-2">
+            Le Cong Lab, Stanford &amp; Mengdi Wang Lab, Princeton
+        </p>
+    </footer>
+
+    <!-- Scroll Reveal Script -->
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+        // Typewriter Effect
+        function createTypewriter(elementId, words, options = {}) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            let wordIndex = 0;
+            let charIndex = 0;
+            let isDeleting = false;
+            let typeSpeed = options.typeSpeed || 100;
+            
+            function type() {
+                const currentWord = words[wordIndex];
+                
+                if (isDeleting) {
+                    element.textContent = currentWord.substring(0, charIndex - 1);
+                    charIndex--;
+                    typeSpeed = options.deleteSpeed || 50;
+                } else {
+                    element.textContent = currentWord.substring(0, charIndex + 1);
+                    charIndex++;
+                    typeSpeed = options.typeSpeed || 100;
+                }
+
+                if (!isDeleting && charIndex === currentWord.length) {
+                    isDeleting = true;
+                    typeSpeed = options.pauseEnd || 2000;
+                } else if (isDeleting && charIndex === 0) {
+                    isDeleting = false;
+                    wordIndex = (wordIndex + 1) % words.length;
+                    typeSpeed = options.pauseStart || 500;
+                }
+
+                setTimeout(type, typeSpeed);
+            }
+            
+            type();
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // Video Autoplay Logic
+            const videos = document.querySelectorAll("video");
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const video = entry.target;
+                        // Try to play unmuted first
+                        video.muted = false;
+                        video.volume = 1.0;
+                        const playPromise = video.play();
+                        
+                        if (playPromise !== undefined) {
+                            playPromise.then(_ => {
+                                // Autoplay started!
+                            }).catch(error => {
+                                // Auto-play was prevented (likely due to sound)
+                                console.log("Autoplay with sound prevented. Falling back to muted.", error);
+                                video.muted = true;
+                                video.play();
+                            });
+                        }
+                    } else {
+                        entry.target.pause();
+                    }
+                });
+            }, { threshold: 0.25 }); // Play when 25% visible
+
+            videos.forEach(video => {
+                video.playsInline = true;
+                observer.observe(video);
+            });
+
+            // Hero Typewriter
+            const disciplines = [
+                "Biology",
+                "Pharma",
+                "Data Science",
+                "Literature",
+                "Clinical Research"
+            ];
+            createTypewriter('hero-typewriter', disciplines, {
+                typeSpeed: 80,
+                deleteSpeed: 50,
+                pauseEnd: 2000,
+                pauseStart: 300
+            });
+        });
+    </script>
+</body>
+</html>
